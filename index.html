@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SoCaBom - Fantaci (Edición Premium)</title>
+    <style>
+        * { user-select: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #050814 0%, #020306 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #fff;
+            overflow-x: auto;
+        }
+        .game-container {
+            position: relative;
+            background: linear-gradient(145deg, #101a18, #0a1110);
+            padding: 24px;
+            border-radius: 28px;
+            border: 1px solid rgba(179, 147, 89, 0.2);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.85), inset 0 1px 2px rgba(255,255,255,0.05);
+            max-width: 95vw;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 0 4px #b39359, 0 15px 35px rgba(0,0,0,0.9);
+            border-radius: 12px;
+            outline: none;
+            width: 100%;
+            height: auto;
+            max-width: 900px;
+            aspect-ratio: 1 / 1;
+            background-color: #060909;
+        }
+        canvas:focus {
+            box-shadow: 0 0 0 4px #e5c158, 0 0 30px rgba(229, 193, 88, 0.35);
+        }
+        .info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            background: linear-gradient(180deg, #0b1116 0%, #05080b 100%);
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-family: 'Courier New', Courier, monospace;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(4, 7, 13, 0.96);
+            border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .hidden { display: none !important; }
+
+        .menu-title {
+            font-size: 64px;
+            color: #f7d44a;
+            text-shadow: 0 0 20px rgba(247, 212, 74, 0.5), 0 4px 10px rgba(0,0,0,0.7);
+            margin-bottom: 5px;
+            text-align: center;
+            font-weight: 900;
+            letter-spacing: 6px;
+            font-family: 'Georgia', serif;
+        }
+        .menu-subtitle {
+            font-size: 20px;
+            color: #b39359;
+            letter-spacing: 8px;
+            margin-bottom: 40px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .aov-banner {
+            font-size: 54px;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            padding: 25px 50px;
+            margin-bottom: 40px;
+            text-align: center;
+            width: 100%;
+            animation: bannerPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .victory-banner {
+            color: #e5c158;
+            text-shadow: 0 0 30px rgba(229, 193, 88, 0.8);
+            background: linear-gradient(90deg, rgba(229,193,88,0) 0%, rgba(229,193,88,0.15) 50%, rgba(229,193,88,0) 100%);
+            border-top: 2px solid #e5c158;
+            border-bottom: 2px solid #e5c158;
+        }
+        .defeat-banner {
+            color: #ff3333;
+            text-shadow: 0 0 30px rgba(255, 51, 51, 0.8);
+            background: linear-gradient(90deg, rgba(255,51,51,0) 0%, rgba(255,51,51,0.15) 50%, rgba(255,51,51,0) 100%);
+            border-top: 2px solid #ff3333;
+            border-bottom: 2px solid #ff3333;
+        }
+
+        @keyframes bannerPop {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-aov {
+            background: linear-gradient(180deg, #423826 0%, #211b12 100%);
+            border: 2px solid #b39359;
+            color: #f3dfb6;
+            padding: 14px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+            min-width: 240px;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            font-family: inherit;
+            letter-spacing: 1px;
+        }
+        .btn-aov:hover {
+            background: linear-gradient(180deg, #b39359 0%, #6e562c 100%);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(179, 147, 89, 0.5);
+            transform: translateY(-3px);
+        }
+        .btn-aov:active { transform: translateY(1px); }
+
+        @media (max-width: 700px) {
+            .menu-title { font-size: 38px; }
+            .menu-subtitle { font-size: 14px; margin-bottom: 25px; }
+            .aov-banner { font-size: 32px; padding: 15px 20px; }
+            .btn-aov { min-width: 180px; padding: 12px 24px; font-size: 14px; }
+            .game-container { padding: 12px; border-radius: 16px; }
+            .overlay { border-radius: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div id="screenMenu" class="overlay">
+        <div class="menu-title">SoCaBom</div>
+        <div class="menu-subtitle">(Fantaci Edition)</div>
+        <button class="btn-aov" onclick="startGame()">Iniciar Partida</button>
+    </div>
+
+    <div id="screenEndgame" class="overlay hidden">
+        <div id="endgameBanner" class="aov-banner">DERROTA</div>
+        <button id="btnNextLevel" class="btn-aov" onclick="nextLevel()">Siguiente Nivel</button>
+        <button id="btnReset" class="btn-aov" onclick="resetGame()">Reiniciar</button>
+        <button class="btn-aov" onclick="backToMenu()">Ir al Menú</button>
+    </div>
+
+    <canvas id="gameCanvas" width="1050" height="1050" tabindex="1"></canvas>
+    
+    <div class="info">
+        <div id="vivosCount" style="color: #a7b0ba; font-weight: bold;">Prisioneros Libres: 0/5</div>
+        <div id="levelDisplay" style="color: #e5c158; font-weight: bold; letter-spacing: 2px;">NIVEL 1</div>
+    </div>
+</div>
+
+<script>
+    // ==================== SOUND MANAGER ====================
+    class SoundManager {
+        constructor() {
+            this.ctx = null;
+            this.enabled = true;
+        }
+
+        init() {
+            if (this.ctx) return;
+            try {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            } catch (e) {
+                console.warn('Web Audio no soportado');
+                this.enabled = false;
+            }
+        }
+
+        playClick() {
+            if (!this.enabled || !this.ctx) return;
+            try {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.08);
+            } catch (e) {}
+        }
+
+        playPlaceBomb() {
+            if (!this.enabled || !this.ctx) return;
+            try {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.12);
+            } catch (e) {}
+        }
+
+        playExplosion() {
+            if (!this.enabled || !this.ctx) return;
+            try {
+                const bufferSize = this.ctx.sampleRate * 0.25;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+                }
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(600, this.ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start(this.ctx.currentTime);
+                noise.stop(this.ctx.currentTime + 0.25);
+            } catch (e) {}
+        }
+
+        playRelease() {
+            if (!this.enabled || !this.ctx) return;
+            try {
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } catch (e) {}
+        }
+
+        playVictory() {
+            if (!this.enabled || !this.ctx) return;
+            try {
+                const notes = [523, 659, 784, 1047];
+                const durations = [0.15, 0.15, 0.15, 0.25];
+                let time = this.ctx.currentTime;
+                for (let i = 0; i < notes.length; i++) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(notes[i], time);
+                    gain.gain.setValueAtTime(0.25, time);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + durations[i]);
+                    osc.start(time);
+                    osc.stop(time + durations[i]);
+                    time += durations[i] + 0.05;
+                }
+            } catch (e) {}
+        }
+
+        playDefeat() {
+            if (!this.enabled || !this.ctx) return;
+            try {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
+                osc.start(this.ctx.currentTime);
+                osc.stop(this.ctx.currentTime + 0.5);
+            } catch (e) {}
+        }
+    }
+
+    const sounds = new SoundManager();
+
+    // ==================== CÓDIGO DEL JUEGO ====================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const screenMenu = document.getElementById('screenMenu');
+    const screenEndgame = document.getElementById('screenEndgame');
+    const endgameBanner = document.getElementById('endgameBanner');
+    const btnNextLevel = document.getElementById('btnNextLevel');
+    const btnReset = document.getElementById('btnReset');
+    const vivosDiv = document.getElementById('vivosCount');
+    const levelDisplay = document.getElementById('levelDisplay');
+    
+    const CELL_SIZE = 50;
+    const MAP_SIZE = 21;
+    const TILE_EMPTY = 0;
+    const TILE_WALL = 1;
+    const TILE_BRICK = 2;
+    
+    let map = [];
+    let players = [];
+    let bombs = [];
+    let explosions = [];
+    let particles = [];
+    let gameRunning = false;
+    let currentLevel = 1;
+    let cameraShake = 0;
+    let globalTicks = 0;
+    
+    // === EFECTOS PARA EXPLOSIÓN DEL JUGADOR (muerte) ===
+    let flashWhite = 0;
+    let bigExplosion = null;
+    
+    const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, Space: false };
+    
+    function clearKeys() {
+        keys.ArrowUp = false; keys.ArrowDown = false;
+        keys.ArrowLeft = false; keys.ArrowRight = false;
+        keys.Space = false;
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+        if(!gameRunning || players.length === 0 || !players[0]) return;
+        if(e.key === 'ArrowUp') keys.ArrowUp = true;
+        if(e.key === 'ArrowDown') keys.ArrowDown = true;
+        if(e.key === 'ArrowLeft') keys.ArrowLeft = true;
+        if(e.key === 'ArrowRight') keys.ArrowRight = true;
+        if(e.key === ' ') {
+            if(!keys.Space) players[0].tryPlaceBomb(true);
+            keys.Space = true;
+        }
+    });
+    
+    window.addEventListener('keyup', (e) => {
+        if(e.key === 'ArrowUp') keys.ArrowUp = false;
+        if(e.key === 'ArrowDown') keys.ArrowDown = false;
+        if(e.key === 'ArrowLeft') keys.ArrowLeft = false;
+        if(e.key === 'ArrowRight') keys.ArrowRight = false;
+        if(e.key === ' ') keys.Space = false;
+    });
+
+    // ==================== FX PARTICLES SYSTEM ====================
+    function spawnDebris(x, y, color, count=10) {
+        for(let i=0; i<count; i++) {
+            particles.push({
+                x: x + 25,
+                y: y + 25,
+                vx: (Math.random() - 0.5) * 5,
+                vy: (Math.random() - 0.5) * 5,
+                size: Math.random() * 5 + 3,
+                color: color,
+                alpha: 1,
+                decay: Math.random() * 0.03 + 0.02,
+                type: 'cube'
+            });
+        }
+    }
+
+    function spawnExplosionParticles(x, y, blue = false) {
+        const colors = blue 
+            ? ['#0088ff', '#00ccff', '#66ddff', '#ffffff'] 
+            : ['#ff6600', '#ffcc00', '#ff8800'];
+        for(let i=0; i<15; i++) {
+            particles.push({
+                x: x + CELL_SIZE/2 + (Math.random()-0.5)*20,
+                y: y + CELL_SIZE/2 + (Math.random()-0.5)*20,
+                vx: (Math.random() - 0.5) * 8,
+                vy: (Math.random() - 0.5) * 8,
+                size: Math.random() * 8 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                alpha: 1,
+                decay: Math.random() * 0.04 + 0.03,
+                type: 'fire'
+            });
+        }
+        for(let i=0; i<8; i++) {
+            particles.push({
+                x: x + CELL_SIZE/2,
+                y: y + CELL_SIZE/2,
+                vx: (Math.random() - 0.5) * 3,
+                vy: (Math.random() - 0.5) * 3,
+                size: Math.random() * 12 + 8,
+                color: blue ? '#334455' : '#555555',
+                alpha: 0.6,
+                decay: 0.02,
+                type: 'smoke'
+            });
+        }
+    }
+
+    function spawnFlashParticles(x, y, color) {
+        for(let i=0; i<20; i++) {
+            let angle = Math.random() * Math.PI * 2;
+            let speed = Math.random() * 4 + 2;
+            particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: Math.random() * 4 + 2,
+                color: color,
+                alpha: 1,
+                decay: 0.03,
+                type: 'star'
+            });
+        }
+    }
+
+    function spawnBigExplosion(px, py) {
+        flashWhite = 1.0;
+        cameraShake = 30;
+        const colors = ['#ff4400', '#ff8800', '#ffcc00', '#ffffff', '#ff2200'];
+        for (let i = 0; i < 80; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 12 + 4;
+            const size = Math.random() * 10 + 4;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            particles.push({
+                x: px + (Math.random() - 0.5) * 20,
+                y: py + (Math.random() - 0.5) * 20,
+                vx: Math.cos(angle) * speed * (0.6 + Math.random() * 0.8),
+                vy: Math.sin(angle) * speed * (0.6 + Math.random() * 0.8),
+                size: size,
+                color: color,
+                alpha: 1,
+                decay: 0.012 + Math.random() * 0.02,
+                type: 'fire'
+            });
+        }
+        for (let i = 0; i < 30; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 4 + 1;
+            particles.push({
+                x: px + (Math.random() - 0.5) * 30,
+                y: py + (Math.random() - 0.5) * 30,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 0.5,
+                size: Math.random() * 20 + 10,
+                color: '#888888',
+                alpha: 0.6,
+                decay: 0.008,
+                type: 'smoke'
+            });
+        }
+        for (let i = 0; i < 40; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 8 + 2;
+            particles.push({
+                x: px + (Math.random() - 0.5) * 20,
+                y: py + (Math.random() - 0.5) * 20,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 2,
+                size: Math.random() * 6 + 4,
+                color: '#665544',
+                alpha: 1,
+                decay: 0.02,
+                type: 'cube'
+            });
+        }
+        bigExplosion = {
+            x: px,
+            y: py,
+            radius: 10,
+            maxRadius: 150,
+            alpha: 1,
+            life: 40
+        };
+    }
+
+    function updateParticles() {
+        for(let i=0; i<particles.length; i++) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= p.decay;
+            if(p.type === 'smoke') { p.size += 0.2; p.vx *= 0.96; p.vy *= 0.96; }
+            if(p.alpha <= 0) { particles.splice(i--, 1); }
+        }
+    }
+
+    // ==================== CLASE JUGADOR ====================
+    class Player {
+        constructor(id, name, color, startX, startY, role) {
+            this.id = id; this.name = name; this.color = color; this.role = role;
+            this.gridX = startX; this.gridY = startY;
+            this.pixelX = startX * CELL_SIZE; this.pixelY = startY * CELL_SIZE;
+            this.moveState = 0; this.moveDirection = null; this.moveProgress = 0;
+            this.alive = true;
+            this.isReleased = (role !== 'prisoner');
+            // RANGO DE BOMBA REDUCIDO A 2
+            this.bombRange = 2;
+            // VELOCIDADES AUMENTADAS
+            this.baseSpeed = (role === 'specialist') ? 3.5 : (role === 'prisoner' ? 4.0 : 4.5);
+            this.aiCooldown = 0;
+            this.animFrame = Math.random() * 100;
+            // Para los fantasmas, asignamos un color de llama único
+            this.flameColor = this.getFlameColor();
+        }
+
+        getFlameColor() {
+            const palette = [
+                '#ff4500', '#ff8c00', '#ffd700', '#00ff7f',
+                '#00bfff', '#9370db', '#ff1493', '#ff6347'
+            ];
+            if (this.role === 'prisoner') {
+                const idx = (this.id - 1) % palette.length;
+                return palette[idx];
+            }
+            return this.color;
+        }
+
+        canMoveTo(dx, dy) {
+            let nx = this.gridX + dx, ny = this.gridY + dy;
+            if(nx < 0 || nx >= MAP_SIZE || ny < 0 || ny >= MAP_SIZE) return false;
+            if(map[ny][nx] === TILE_WALL || map[ny][nx] === TILE_BRICK) return false;
+            for(let b of bombs) { if(b.x === nx && b.y === ny) return false; }
+            return true;
+        }
+        
+        startMove(direction) {
+            if(this.moveState === 1 || !this.alive) return false;
+            let dx=0, dy=0;
+            if(direction==='up') dy=-1; if(direction==='down') dy=1;
+            if(direction==='left') dx=-1; if(direction==='right') dx=1;
+            
+            if(this.canMoveTo(dx, dy)) {
+                this.moveState = 1; this.moveDirection = direction; this.moveProgress = 0;
+                return true;
+            }
+            return false;
+        }
+        
+        updateMove() {
+            this.animFrame++;
+            if(this.moveState !== 1) return;
+            this.moveProgress += this.baseSpeed;
+            if(this.moveProgress >= CELL_SIZE) {
+                if(this.moveDirection==='up') this.gridY--;
+                else if(this.moveDirection==='down') this.gridY++;
+                else if(this.moveDirection==='left') this.gridX--;
+                else if(this.moveDirection==='right') this.gridX++;
+                
+                this.pixelX = this.gridX * CELL_SIZE; this.pixelY = this.gridY * CELL_SIZE;
+                this.moveState = 0; this.moveDirection = null;
+                
+                if(this.role === 'prisoner' && !this.isReleased) this.checkIfLiberated();
+            } else {
+                let off = this.moveProgress;
+                if(this.moveDirection==='up') this.pixelY = this.gridY*CELL_SIZE - off;
+                else if(this.moveDirection==='down') this.pixelY = this.gridY*CELL_SIZE + off;
+                else if(this.moveDirection==='left') this.pixelX = this.gridX*CELL_SIZE - off;
+                else if(this.moveDirection==='right') this.pixelX = this.gridX*CELL_SIZE + off;
+            }
+        }
+
+        checkIfLiberated() {
+            let dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+            for(let [dx,dy] of dirs) {
+                let ny = this.gridY + dy;
+                let nx = this.gridX + dx;
+                if(map[ny] && map[ny][nx] === TILE_EMPTY) { 
+                    this.isReleased = true; 
+                    this.aiCooldown = 0; 
+                    sounds.playRelease();
+                    spawnFlashParticles(this.pixelX + 25, this.pixelY + 25, this.flameColor);
+                    break; 
+                }
+            }
+        }
+
+        tryPlaceBomb(isHuman = false) {
+            if(!this.alive) return false;
+            for(let b of bombs) { if(b.x === this.gridX && b.y === this.gridY) return false; }
+            bombs.push({ 
+                x: this.gridX, 
+                y: this.gridY, 
+                range: this.bombRange, 
+                timer: 60, 
+                maxTimer: 60, 
+                isHumanBomb: isHuman
+            });
+            if (isHuman) sounds.playPlaceBomb();
+            return true;
+        }
+
+        draw(ctx) {
+            if(!this.alive) return;
+
+            if (this.role === 'prisoner') {
+                this.drawGhostWithFire(ctx);
+                return;
+            }
+
+            ctx.save();
+            ctx.translate(this.pixelX + 25, this.pixelY + 25);
+
+            ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+            ctx.beginPath();
+            ctx.ellipse(0, 18, 14, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            let scaleX = 1;
+            let scaleY = 1;
+            let jumpY = 0;
+
+            if(this.moveState === 1) {
+                jumpY = Math.abs(Math.sin(this.animFrame * 0.2)) * -4;
+                scaleX = 1 + Math.sin(this.animFrame * 0.2) * 0.05;
+                scaleY = 1 - Math.sin(this.animFrame * 0.2) * 0.05;
+            } else {
+                scaleY = 1 + Math.sin(this.animFrame * 0.06) * 0.03;
+                scaleX = 1 - Math.sin(this.animFrame * 0.06) * 0.03;
+            }
+            ctx.translate(0, jumpY);
+            ctx.scale(scaleX, scaleY);
+
+            if(this.role === 'player') {
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(-10, -5, 20, 15);
+                ctx.fillStyle = this.color; 
+                ctx.fillRect(-7, -2, 14, 12);
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.arc(0, -12, 13, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#222222";
+                ctx.beginPath();
+                ctx.roundRect(-9, -17, 18, 10, 4);
+                ctx.fill();
+                let glow = ctx.createLinearGradient(-9, -17, 9, -7);
+                glow.addColorStop(0, '#3aafff');
+                glow.addColorStop(1, '#0044aa');
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.roundRect(-8, -16, 16, 8, 3);
+                ctx.fill();
+                ctx.fillStyle = "rgba(255,255,255,0.7)";
+                ctx.fillRect(-5, -15, 4, 2);
+                ctx.fillStyle = "#ff3366";
+                ctx.beginPath();
+                ctx.arc(0, -28, 4, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#ff3366";
+                ctx.beginPath(); ctx.arc(-7, 12, 4, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(7, 12, 4, 0, Math.PI*2); ctx.fill();
+            } else if(this.role === 'specialist') {
+                ctx.fillStyle = "#1c2826";
+                ctx.fillRect(-11, -4, 22, 16);
+                ctx.fillStyle = "#34495e";
+                ctx.fillRect(-9, -4, 18, 14);
+                ctx.fillStyle = "#d35400";
+                ctx.fillRect(-14, -2, 4, 12);
+                ctx.fillStyle = "#2ecc71";
+                ctx.fillRect(-14, 2, 4, 2);
+                ctx.fillStyle = "#e67e22"; 
+                ctx.beginPath(); ctx.arc(0, -11, 11, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#27ae60";
+                ctx.beginPath(); ctx.arc(0, -13, 12, Math.PI, 0); ctx.fill();
+                ctx.fillRect(-12, -13, 24, 4);
+                ctx.fillStyle = "#222222";
+                ctx.fillRect(-8, -12, 16, 5);
+                ctx.fillStyle = "#00ff66";
+                ctx.beginPath(); ctx.arc(-4, -9, 2, 0, Math.PI*2); ctx.arc(4, -9, 2, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#111111";
+                ctx.fillRect(-9, 10, 5, 4);
+                ctx.fillRect(4, 10, 5, 4);
+            }
+
+            ctx.restore();
+        }
+
+        drawGhostWithFire(ctx) {
+            const cx = this.pixelX + 25;
+            const cy = this.pixelY + 25;
+            const time = this.animFrame;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            const floatY = Math.sin(time * 0.04) * 2;
+            ctx.translate(0, floatY);
+
+            let s = 1;
+            if (this.moveState === 1) {
+                s = 1 + Math.sin(time * 0.3) * 0.05;
+            }
+            ctx.scale(s, s);
+
+            const flameColor = this.flameColor;
+            const grad = ctx.createRadialGradient(0, -8, 2, 0, 0, 22);
+            grad.addColorStop(0, this.isReleased ? '#ffffff' : flameColor);
+            grad.addColorStop(0.6, flameColor);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(0, -6, 16, 0, Math.PI * 2);
+            ctx.moveTo(-16, -6);
+            ctx.quadraticCurveTo(-18, 10, -10, 20);
+            ctx.quadraticCurveTo(0, 24, 10, 20);
+            ctx.quadraticCurveTo(18, 10, 16, -6);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.shadowColor = flameColor;
+            ctx.shadowBlur = 20;
+            ctx.strokeStyle = flameColor;
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.6;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+
+            ctx.fillStyle = this.isReleased ? '#ffffff' : '#ffcc00';
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            ctx.arc(-6, -10, 4, 0, Math.PI * 2);
+            ctx.arc(6, -10, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle = this.isReleased ? '#ff4400' : '#000000';
+            ctx.beginPath();
+            ctx.arc(-6 + (this.isReleased ? 0 : 2), -10, 2, 0, Math.PI * 2);
+            ctx.arc(6 + (this.isReleased ? 0 : -2), -10, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            const flameCount = 8;
+            for (let i = 0; i < flameCount; i++) {
+                const angle = (i / flameCount) * Math.PI * 2 + time * 0.05;
+                const radius = 20 + Math.sin(time * 0.1 + i) * 4;
+                const fx = Math.cos(angle) * radius;
+                const fy = Math.sin(angle) * radius * 0.7 - 4;
+                const size = 3 + Math.sin(time * 0.2 + i * 1.5) * 2;
+                const alpha = 0.7 + Math.sin(time * 0.15 + i * 2) * 0.3;
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.shadowColor = flameColor;
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = flameColor;
+                ctx.beginPath();
+                ctx.arc(fx, fy, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(fx, fy, size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            if (this.isReleased) {
+                ctx.save();
+                ctx.globalAlpha = 0.3 + Math.sin(time * 0.1) * 0.15;
+                ctx.shadowColor = flameColor;
+                ctx.shadowBlur = 40;
+                ctx.fillStyle = flameColor;
+                ctx.beginPath();
+                ctx.arc(0, 0, 28, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+    }
+
+    // ==================== UTILIDADES DE CAMINO (A*) ====================
+    function aStar(start, target, ignoreBricks = false) {
+        let openSet = [{x:start.x, y:start.y, g:0, f:0, parent:null}];
+        let closedSet = new Set();
+        while(openSet.length) {
+            openSet.sort((a,b)=>a.f-b.f);
+            let current = openSet.shift();
+            if(current.x === target.x && current.y === target.y) {
+                let path = [];
+                while(current.parent) { path.unshift(current); current = current.parent; }
+                if(!path.length) return null;
+                if(path[0].x > start.x) return 'right'; if(path[0].x < start.x) return 'left';
+                if(path[0].y > start.y) return 'down'; if(path[0].y < start.y) return 'up';
+            }
+            closedSet.add(current.x + "," + current.y);
+            let dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+            for(let [dx,dy] of dirs) {
+                let nx = current.x+dx, ny = current.y+dy;
+                if(nx<0||nx>=MAP_SIZE||ny<0||ny>=MAP_SIZE||closedSet.has(nx+","+ny)) continue;
+                let tile = map[ny][nx];
+                if(tile === TILE_WALL) continue;
+                if(tile === TILE_BRICK && !ignoreBricks) continue;
+                let g = current.g + 1;
+                let h = Math.abs(nx-target.x) + Math.abs(ny-target.y);
+                openSet.push({x:nx, y:ny, g:g, f:g+h, parent:current});
+            }
+        }
+        return null;
+    }
+
+    // ==================== GENERACIÓN DEL MAPA ====================
+    function initMap() {
+        let newMap = Array(MAP_SIZE).fill().map(()=>Array(MAP_SIZE).fill(TILE_EMPTY));
+        for(let i=0;i<MAP_SIZE;i++) {
+            newMap[0][i]=TILE_WALL; newMap[MAP_SIZE-1][i]=TILE_WALL;
+            newMap[i][0]=TILE_WALL; newMap[i][MAP_SIZE-1]=TILE_WALL;
+        }
+        for(let y=2; y<MAP_SIZE-2; y+=2) {
+            for(let x=2; x<MAP_SIZE-2; x+=2) { newMap[y][x]=TILE_WALL; }
+        }
+        const safeCells = new Set();
+        const playerStart = [1,1];
+        const neighbors = [[0,0],[1,0],[0,1],[2,1],[1,2],[2,2]];
+        for(let [dx,dy] of neighbors) {
+            let x = playerStart[0]+dx, y = playerStart[1]+dy;
+            if(x>=0 && x<MAP_SIZE && y>=0 && y<MAP_SIZE) safeCells.add(x+","+y);
+        }
+        const specStart = [10,11];
+        const specNeighbors = [[0,0],[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
+        for(let [dx,dy] of specNeighbors) {
+            let x = specStart[0]+dx, y = specStart[1]+dy;
+            if(x>=0 && x<MAP_SIZE && y>=0 && y<MAP_SIZE) safeCells.add(x+","+y);
+        }
+        const prisonerPositions = [[1,19],[19,1],[17,19],[1,9],[9,1]];
+        for(let [px,py] of prisonerPositions) { safeCells.add(px+","+py); }
+        const exitPos = [19,19];
+        const exitNeighbors = [[0,0],[1,0],[0,1],[-1,0],[0,-1]];
+        for(let [dx,dy] of exitNeighbors) {
+            let x = exitPos[0]+dx, y = exitPos[1]+dy;
+            if(x>=0 && x<MAP_SIZE && y>=0 && y<MAP_SIZE) safeCells.add(x+","+y);
+        }
+        for(let [jx, jy] of prisonerPositions) {
+            let dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+            for(let [dx,dy] of dirs) {
+                let nx = jx+dx, ny = jy+dy;
+                if(nx>0 && nx<MAP_SIZE-1 && ny>0 && ny<MAP_SIZE-1 && newMap[ny][nx]===TILE_EMPTY) {
+                    if(!safeCells.has(nx+","+ny)) { newMap[ny][nx] = TILE_BRICK; }
+                }
+            }
+        }
+        for(let y=1; y<MAP_SIZE-1; y++) {
+            for(let x=1; x<MAP_SIZE-1; x++) {
+                if(newMap[y][x]===TILE_EMPTY && Math.random()<0.25) {
+                    if(!safeCells.has(x+","+y)) { newMap[y][x]=TILE_BRICK; }
+                }
+            }
+        }
+        for(let [px,py] of prisonerPositions) { newMap[py][px] = TILE_EMPTY; }
+        newMap[playerStart[1]][playerStart[0]] = TILE_EMPTY;
+        newMap[specStart[1]][specStart[0]] = TILE_EMPTY;
+        newMap[exitPos[1]][exitPos[0]] = TILE_EMPTY;
+        return newMap;
+    }
+
+    // ==================== INTERFACES Y CONTROL PARTIDA ====================
+    function startGame() {
+        sounds.init();
+        sounds.playClick();
+        screenMenu.classList.add('hidden');
+        screenEndgame.classList.add('hidden');
+        currentLevel = 1;
+        clearKeys();
+        resetGame();
+    }
+
+    function backToMenu() {
+        sounds.playClick();
+        screenEndgame.classList.add('hidden');
+        screenMenu.classList.remove('hidden');
+        gameRunning = false;
+        players = []; 
+        clearKeys();
+    }
+
+    function nextLevel() {
+        sounds.playClick();
+        currentLevel++;
+        screenEndgame.classList.add('hidden');
+        clearKeys();
+        resetGame();
+    }
+
+    function triggerEndgame(win) {
+        gameRunning = false;
+        screenEndgame.classList.remove('hidden');
+        if(win) {
+            endgameBanner.innerText = "¡VICTORIA!";
+            endgameBanner.className = "aov-banner victory-banner";
+            btnNextLevel.classList.remove('hidden');
+            btnReset.classList.remove('hidden');
+            sounds.playVictory();
+        } else {
+            endgameBanner.innerText = "DERROTA";
+            endgameBanner.className = "aov-banner defeat-banner";
+            btnNextLevel.classList.add('hidden');
+            btnReset.classList.add('hidden');
+            sounds.playDefeat();
+        }
+    }
+
+    function resetGame() {
+        map = initMap();
+        levelDisplay.innerText = `NIVEL ${currentLevel}`;
+        particles = [];
+        flashWhite = 0;
+        bigExplosion = null;
+        
+        players = [
+            new Player(0, "TÚ", "#3aafff", 1, 1, 'player'),
+            new Player(1, "REO 1", "#e74c3c", 1, 19, 'prisoner'),
+            new Player(2, "REO 2", "#e67e22", 19, 1, 'prisoner'),
+            new Player(3, "REO 3", "#f1c40f", 17, 19, 'prisoner'),
+            new Player(4, "REO 4", "#9b59b6", 1, 9, 'prisoner'),
+            new Player(5, "REO 5", "#1abc9c", 9, 1, 'prisoner'),
+            new Player(6, "ESPECIALISTA", "#27ae60", 10, 11, 'specialist')
+        ];
+        
+        bombs = []; 
+        explosions = []; 
+        gameRunning = true; 
+        setTimeout(() => { canvas.focus(); }, 50);
+    }
+
+    // ==================== ENGINES ACTUALIZACIONES & IA ====================
+    function updateBots() {
+        if (players.length === 0) return;
+        let player = players[0];
+        
+        for(let p of players) {
+            if(p.role === 'player' || !p.alive || p.moveState === 1) continue;
+            if(p.aiCooldown > 0) { p.aiCooldown--; continue; }
+            
+            if(p.role === 'specialist') {
+                let targetBrick = null;
+                let minD = 999;
+                
+                for(let prisoner of players) {
+                    if(prisoner.role === 'prisoner' && !prisoner.isReleased && prisoner.alive) {
+                        let dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+                        for(let [dx,dy] of dirs) {
+                            let bx = prisoner.gridX + dx, by = prisoner.gridY + dy;
+                            if(map[by] && map[by][bx] === TILE_BRICK) {
+                                let dist = Math.abs(p.gridX - bx) + Math.abs(p.gridY - by);
+                                if(dist < minD) { minD = dist; targetBrick = {x: bx, y: by}; }
+                            }
+                        }
+                    }
+                }
+                
+                if(!targetBrick) {
+                    for(let y=1; y<MAP_SIZE-1; y++) {
+                        for(let x=1; x<MAP_SIZE-1; x++) {
+                            if(map[y][x] === TILE_BRICK) {
+                                let dist = Math.abs(p.gridX - x) + Math.abs(p.gridY - y);
+                                if(dist < minD) { minD = dist; targetBrick = {x, y}; }
+                            }
+                        }
+                    }
+                }
+
+                if(targetBrick) {
+                    let distanceToTarget = Math.abs(p.gridX - targetBrick.x) + Math.abs(p.gridY - targetBrick.y);
+                    if(distanceToTarget === 1) {
+                        if(p.tryPlaceBomb(false)) {
+                            p.aiCooldown = 15; // Reducido de 25 a 15
+                            let escapeDirs = ['up','down','left','right'];
+                            for(let ed of escapeDirs) { if(p.startMove(ed)) break; }
+                            continue;
+                        }
+                    }
+                    let dir = aStar({x:p.gridX, y:p.gridY}, targetBrick, true);
+                    if(dir) {
+                        let dx = 0, dy = 0;
+                        if(dir === 'up') dy = -1; if(dir === 'down') dy = 1;
+                        if(dir === 'left') dx = -1; if(dir === 'right') dx = 1;
+                        if(map[p.gridY + dy][p.gridX + dx] === TILE_BRICK) {
+                            if(p.tryPlaceBomb(false)) { p.aiCooldown = 15; continue; }
+                        }
+                        p.startMove(dir);
+                    }
+                } else {
+                    p.startMove(['up','down','left','right'][Math.floor(Math.random()*4)]);
+                }
+                p.aiCooldown = 2; // Reducido de 4 a 2
+            }
+            
+            if(p.role === 'prisoner') {
+                if(!p.isReleased) continue; 
+                
+                if(player.alive) {
+                    let dir = aStar({x:p.gridX, y:p.gridY}, {x:player.gridX, y:player.gridY}, false);
+                    if(dir) { p.startMove(dir); } 
+                    else { p.startMove(['up','down','left','right'][Math.floor(Math.random()*4)]); }
+                }
+                p.aiCooldown = 3; // Reducido de 6 a 3
+            }
+        }
+    }
+
+    function updateBombs() {
+        for(let i=0; i<bombs.length; i++) {
+            let b = bombs[i]; b.timer--;
+            if(b.timer <= 0) {
+                sounds.playExplosion();
+                const isBotBomb = !b.isHumanBomb;
+                let dirs = [[0,0],[0,-1],[0,1],[-1,0],[1,0]];
+                for(let [dx,dy] of dirs) {
+                    for(let r=0; r<=b.range; r++) {
+                        let nx = b.x + dx*r, ny = b.y + dy*r;
+                        if(nx<0||nx>=MAP_SIZE||ny<0||ny>=MAP_SIZE||map[ny][nx]===TILE_WALL) break;
+                        
+                        explosions.push({x:nx, y:ny, timer:18, maxTimer:18, blue: isBotBomb});
+                        spawnExplosionParticles(nx * CELL_SIZE, ny * CELL_SIZE, isBotBomb);
+                        
+                        if(map[ny][nx] === TILE_BRICK) { 
+                            map[ny][nx] = TILE_EMPTY; 
+                            spawnDebris(nx * CELL_SIZE, ny * CELL_SIZE, '#9e6231', 12);
+                            for(let p of players) {
+                                if(p.role === 'prisoner' && !p.isReleased && p.alive) {
+                                    p.checkIfLiberated();
+                                }
+                            }
+                            break; 
+                        }
+                        
+                        for(let p of players) {
+                            if(p.gridX === nx && p.gridY === ny && p.alive) {
+                                if(b.isHumanBomb || p.role === 'player') {
+                                    p.alive = false;
+                                    if(p.role === 'player') {
+                                        let px = p.pixelX + 25;
+                                        let py = p.pixelY + 25;
+                                        spawnBigExplosion(px, py);
+                                        sounds.playExplosion();
+                                        gameRunning = false;
+                                        setTimeout(() => {
+                                            triggerEndgame(false);
+                                        }, 1500);
+                                    } else {
+                                        spawnFlashParticles(p.pixelX + 25, p.pixelY + 25, '#ff3333');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                cameraShake = 16; bombs.splice(i--, 1);
+            }
+        }
+        for(let i=0; i<explosions.length; i++) {
+            explosions[i].timer--; if(explosions[i].timer <= 0) explosions.splice(i--, 1);
+        }
+    }
+
+    function checkCollisionsAndGoals() {
+        if(!gameRunning || players.length === 0) return;
+        let player = players[0];
+        
+        if(player.gridX === 19 && player.gridY === 19) { triggerEndgame(true); return; }
+        
+        for(let i=1; i<players.length; i++) {
+            let enemy = players[i];
+            if(enemy.alive && enemy.isReleased && enemy.role === 'prisoner') {
+                if(Math.abs(player.pixelX - enemy.pixelX) < 28 && Math.abs(player.pixelY - enemy.pixelY) < 28) {
+                    player.alive = false; 
+                    spawnBigExplosion(player.pixelX + 25, player.pixelY + 25);
+                    gameRunning = false;
+                    setTimeout(() => {
+                        triggerEndgame(false);
+                    }, 1500);
+                    return;
+                }
+            }
+        }
+    }
+
+    // ==================== RENDERIZADO / DIBUJO ====================
+    function draw() {
+        globalTicks++;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.save();
+        
+        if(cameraShake > 0) {
+            ctx.translate((Math.random()-0.5)*cameraShake, (Math.random()-0.5)*cameraShake);
+            cameraShake *= 0.88; if(cameraShake<0.5) cameraShake=0;
+        }
+        
+        for(let y=0; y<MAP_SIZE; y++) {
+            for(let x=0; x<MAP_SIZE; x++) {
+                let px = x * CELL_SIZE, py = y * CELL_SIZE;
+                if(map[y][x] === TILE_WALL) {
+                    let grad = ctx.createLinearGradient(px, py, px + CELL_SIZE, py + CELL_SIZE);
+                    grad.addColorStop(0, '#364340');
+                    grad.addColorStop(0.5, '#202b28');
+                    grad.addColorStop(1, '#0e1413');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
+                    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(px+1, py+1, CELL_SIZE-2, CELL_SIZE-2);
+                    ctx.strokeStyle = "rgba(0,0,0,0.5)";
+                    ctx.strokeRect(px+3, py+3, CELL_SIZE-6, CELL_SIZE-6);
+                    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+                    ctx.beginPath();
+                    ctx.moveTo(px+10, py+8); ctx.lineTo(px+15, py+22); ctx.lineTo(px+8, py+38);
+                    ctx.stroke();
+                } else if(map[y][x] === TILE_BRICK) {
+                    let grad = ctx.createLinearGradient(px, py, px + CELL_SIZE, py + CELL_SIZE);
+                    grad.addColorStop(0, '#b87333');
+                    grad.addColorStop(0.4, '#8c4f24');
+                    grad.addColorStop(1, '#5c2d0c');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(px+2, py+2, CELL_SIZE-4, CELL_SIZE-4);
+                    ctx.fillStyle = "#475569";
+                    ctx.fillRect(px+2, py+2, 10, 10);
+                    ctx.fillRect(px+CELL_SIZE-12, py+2, 10, 10);
+                    ctx.fillRect(px+2, py+CELL_SIZE-12, 10, 10);
+                    ctx.fillRect(px+CELL_SIZE-12, py+CELL_SIZE-12, 10, 10);
+                    ctx.fillStyle = "#cbd5e1";
+                    ctx.beginPath();
+                    ctx.arc(px+7, py+7, 2, 0, Math.PI*2);
+                    ctx.arc(px+CELL_SIZE-7, py+7, 2, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.strokeStyle = "#2e1605";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(px+2, py+2, CELL_SIZE-4, CELL_SIZE-4);
+                } else {
+                    ctx.fillStyle = (x + y) % 2 === 0 ? "#111a19" : "#0d1413";
+                    ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
+                    ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(px, py, CELL_SIZE, CELL_SIZE);
+                }
+            }
+        }
+        
+        let ex = 19 * CELL_SIZE, ey = 19 * CELL_SIZE;
+        ctx.save();
+        let pulsePortal = Math.sin(globalTicks * 0.08) * 6;
+        let portalGlow = ctx.createRadialGradient(ex+25, ey+25, 5, ex+25, ey+25, 30 + pulsePortal);
+        portalGlow.addColorStop(0, 'rgba(230, 180, 40, 0.5)');
+        portalGlow.addColorStop(0.6, 'rgba(210, 140, 10, 0.2)');
+        portalGlow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = portalGlow;
+        ctx.fillRect(ex-10, ey-10, CELL_SIZE+20, CELL_SIZE+20);
+        ctx.strokeStyle = "#e5c158"; 
+        ctx.lineWidth = 4;
+        ctx.strokeRect(ex+4, ey+4, CELL_SIZE-8, CELL_SIZE-8);
+        ctx.fillStyle = "#0c1020";
+        ctx.fillRect(ex+7, ey+7, CELL_SIZE-14, CELL_SIZE-14);
+        ctx.strokeStyle = "rgba(245, 220, 100, " + (0.5 + Math.sin(globalTicks*0.1)*0.3) + ")";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(ex+25, ey+25, 12 + Math.sin(globalTicks*0.15)*3, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.font = "bold 22px sans-serif";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("🌌", ex+25, ey+24 + Math.sin(globalTicks*0.07)*3);
+        ctx.restore();
+        
+        for(let b of bombs) {
+            let bx = b.x * CELL_SIZE + 25;
+            let by = b.y * CELL_SIZE + 25;
+            let pctLife = b.timer / b.maxTimer;
+            let speedPulse = 1 + (1 - pctLife) * 0.25; 
+            let scaleBomb = 1 + Math.abs(Math.sin(globalTicks * 0.2 * speedPulse)) * 0.12 * (1 - pctLife);
+            ctx.save();
+            ctx.translate(bx, by);
+            ctx.scale(scaleBomb, scaleBomb);
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
+            ctx.beginPath(); ctx.ellipse(0, 14, 12, 5, 0, 0, Math.PI*2); ctx.fill();
+            let colorGrad = ctx.createRadialGradient(-4, -6, 2, 0, 0, 16);
+            if(b.timer < 20 && Math.floor(globalTicks / 4) % 2 === 0) {
+                colorGrad.addColorStop(0, b.isHumanBomb ? '#ff9999' : '#88ccff');
+                colorGrad.addColorStop(0.4, b.isHumanBomb ? '#ff1111' : '#0088ff');
+                colorGrad.addColorStop(1, b.isHumanBomb ? '#4a0000' : '#003366');
+            } else {
+                colorGrad.addColorStop(0, b.isHumanBomb ? '#9fc5ff' : '#66aaff');
+                colorGrad.addColorStop(0.3, b.isHumanBomb ? '#316db3' : '#0066cc');
+                colorGrad.addColorStop(1, b.isHumanBomb ? '#0b203a' : '#002244');
+            }
+            ctx.fillStyle = colorGrad;
+            ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#333333";
+            ctx.fillRect(-4, -18, 8, 4);
+            ctx.strokeStyle = "#d7ccc8";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, -18);
+            ctx.bezierCurveTo(6, -24, -2, -28, 4, -33);
+            ctx.stroke();
+            let sparkFrame = Math.random() * 4 + 2;
+            let sparkGrad = ctx.createRadialGradient(4, -33, 1, 4, -33, sparkFrame);
+            sparkGrad.addColorStop(0, '#ffffff');
+            sparkGrad.addColorStop(0.4, b.isHumanBomb ? '#ffea00' : '#88ddff');
+            sparkGrad.addColorStop(1, 'rgba(255,68,0,0)');
+            ctx.fillStyle = sparkGrad;
+            ctx.beginPath(); ctx.arc(4, -33, sparkFrame, 0, Math.PI*2); ctx.fill();
+            let secsLeft = Math.ceil(b.timer / 20);
+            ctx.fillStyle = "rgba(255,255,255,0.85)";
+            ctx.font = "900 11px monospace";
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText(secsLeft, 0, 1);
+            ctx.restore();
+        }
+
+        for(let e of explosions) { 
+            let ex = e.x * CELL_SIZE;
+            let ey = e.y * CELL_SIZE;
+            let tPct = e.timer / e.maxTimer;
+            let colors;
+            if (e.blue) {
+                colors = [
+                    `rgba(0, 100, 255, ${tPct * 0.8})`,
+                    `rgba(0, 180, 255, ${tPct * 0.9})`,
+                    `rgba(100, 220, 255, ${tPct})`,
+                    `rgba(255, 255, 255, ${tPct})`
+                ];
+            } else {
+                colors = [
+                    `rgba(231, 76, 60, ${tPct * 0.8})`,
+                    `rgba(230, 126, 34, ${tPct * 0.9})`,
+                    `rgba(241, 196, 15, ${tPct})`,
+                    `rgba(255, 255, 255, ${tPct})`
+                ];
+            }
+            ctx.fillStyle = colors[0];
+            ctx.fillRect(ex, ey, CELL_SIZE, CELL_SIZE);
+            ctx.fillStyle = colors[1];
+            ctx.fillRect(ex + 4, ey + 4, CELL_SIZE - 8, CELL_SIZE - 8);
+            ctx.fillStyle = colors[2];
+            ctx.fillRect(ex + 9, ey + 9, CELL_SIZE - 18, CELL_SIZE - 18);
+            ctx.fillStyle = colors[3];
+            ctx.fillRect(ex + 15, ey + 15, CELL_SIZE - 30, CELL_SIZE - 30);
+        }
+        
+        for(let p of players) { p.draw(ctx); }
+
+        updateParticles();
+        for(let p of particles) {
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            if(p.type === 'cube') {
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            } else if(p.type === 'smoke') {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            } else {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        if (bigExplosion) {
+            let b = bigExplosion;
+            b.radius += 4;
+            b.alpha -= 0.025;
+            b.life--;
+            if (b.alpha < 0 || b.life <= 0) {
+                bigExplosion = null;
+            } else {
+                for (let r = b.radius; r > 0; r -= 10) {
+                    let alpha = b.alpha * (1 - r / b.maxRadius);
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+                    if (r > b.maxRadius * 0.6) ctx.fillStyle = '#ff4400';
+                    else if (r > b.maxRadius * 0.3) ctx.fillStyle = '#ff8800';
+                    else ctx.fillStyle = '#ffcc00';
+                    ctx.fill();
+                }
+                ctx.globalAlpha = b.alpha * 0.8;
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius * 0.2, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        if (flashWhite > 0) {
+            ctx.globalAlpha = flashWhite;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalAlpha = 1;
+            flashWhite *= 0.93;
+            if (flashWhite < 0.01) flashWhite = 0;
+        }
+
+        ctx.restore();
+        
+        let releasedCount = players.filter(p=>p.role==='prisoner' && p.isReleased).length;
+        vivosDiv.innerText = `Prisioneros Libres: ${releasedCount}/5`;
+    }
+
+    // ==================== BUCLE PRINCIPAL ====================
+    function gameLoop() {
+        if(gameRunning && players[0]) {
+            if(keys.ArrowUp) players[0].startMove('up');
+            else if(keys.ArrowDown) players[0].startMove('down');
+            else if(keys.ArrowLeft) players[0].startMove('left');
+            else if(keys.ArrowRight) players[0].startMove('right');
+            
+            updateBots();
+            for(let p of players) p.updateMove();
+            updateBombs();
+            checkCollisionsAndGoals();
+        }
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    map = initMap();
+    gameLoop();
+</script>
+</body>
+</html>
