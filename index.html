@@ -2,10 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SoCaBom - Fantaci (Edición Premium)</title>
     <style>
-        * { user-select: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        * { user-select: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; touch-action: none; }
         body {
             background: linear-gradient(135deg, #050814 0%, #020306 100%);
             display: flex;
@@ -16,7 +16,8 @@
             margin: 0;
             padding: 20px;
             color: #fff;
-            overflow-x: auto;
+            overflow: hidden;
+            touch-action: none;
         }
         .game-container {
             position: relative;
@@ -26,6 +27,7 @@
             border: 1px solid rgba(179, 147, 89, 0.2);
             box-shadow: 0 25px 60px rgba(0,0,0,0.85), inset 0 1px 2px rgba(255,255,255,0.05);
             max-width: 95vw;
+            touch-action: none;
         }
         canvas {
             display: block;
@@ -38,6 +40,7 @@
             max-width: 900px;
             aspect-ratio: 1 / 1;
             background-color: #060909;
+            touch-action: none;
         }
         canvas:focus {
             box-shadow: 0 0 0 4px #e5c158, 0 0 30px rgba(229, 193, 88, 0.35);
@@ -139,6 +142,7 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.6);
             font-family: inherit;
             letter-spacing: 1px;
+            touch-action: manipulation;
         }
         .btn-aov:hover {
             background: linear-gradient(180deg, #b39359 0%, #6e562c 100%);
@@ -148,6 +152,82 @@
         }
         .btn-aov:active { transform: translateY(1px); }
 
+        /* ===== CONTROLES TÁCTILES ===== */
+        .touch-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 200px;
+            pointer-events: none;
+            z-index: 5;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            touch-action: none;
+        }
+        .dpad {
+            pointer-events: auto;
+            position: relative;
+            width: 180px;
+            height: 180px;
+            touch-action: none;
+        }
+        .dpad-btn {
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            transition: background 0.1s;
+            touch-action: none;
+            user-select: none;
+            cursor: pointer;
+        }
+        .dpad-btn:active, .dpad-btn.active {
+            background: rgba(255,255,255,0.35);
+            border-color: #e5c158;
+        }
+        .dpad-up { top: 0; left: 50%; transform: translateX(-50%); }
+        .dpad-down { bottom: 0; left: 50%; transform: translateX(-50%); }
+        .dpad-left { top: 50%; left: 0; transform: translateY(-50%); }
+        .dpad-right { top: 50%; right: 0; transform: translateY(-50%); }
+
+        .btn-bomb {
+            pointer-events: auto;
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,80,80,0.5), rgba(180,0,0,0.7));
+            border: 3px solid #ff4444;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px #ff0000;
+            box-shadow: 0 0 30px rgba(255,0,0,0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+            touch-action: none;
+            user-select: none;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .btn-bomb:active, .btn-bomb.active {
+            transform: scale(0.9);
+            box-shadow: 0 0 60px rgba(255,0,0,0.6);
+        }
+
         @media (max-width: 700px) {
             .menu-title { font-size: 38px; }
             .menu-subtitle { font-size: 14px; margin-bottom: 25px; }
@@ -155,7 +235,20 @@
             .btn-aov { min-width: 180px; padding: 12px 24px; font-size: 14px; }
             .game-container { padding: 12px; border-radius: 16px; }
             .overlay { border-radius: 16px; }
+            .touch-controls { bottom: 15px; padding: 0 10px; height: 160px; }
+            .dpad { width: 140px; height: 140px; }
+            .dpad-btn { width: 44px; height: 44px; font-size: 22px; }
+            .btn-bomb { width: 70px; height: 70px; font-size: 28px; }
         }
+        @media (pointer: coarse) {
+            /* solo en táctil */
+            .touch-controls { display: flex; }
+        }
+        @media (pointer: fine) {
+            /* PC: ocultar controles táctiles para no estorbar, pero se pueden mostrar si se quiere */
+            .touch-controls { display: none; }
+        }
+        /* Si se quiere forzar a mostrar en PC también, quitar la regla anterior */
     </style>
 </head>
 <body>
@@ -175,7 +268,18 @@
     </div>
 
     <canvas id="gameCanvas" width="1050" height="1050" tabindex="1"></canvas>
-    
+
+    <!-- Controles táctiles -->
+    <div class="touch-controls" id="touchControls">
+        <div class="dpad" id="dpad">
+            <div class="dpad-btn dpad-up" data-dir="up">▲</div>
+            <div class="dpad-btn dpad-down" data-dir="down">▼</div>
+            <div class="dpad-btn dpad-left" data-dir="left">◀</div>
+            <div class="dpad-btn dpad-right" data-dir="right">▶</div>
+        </div>
+        <div class="btn-bomb" id="btnBomb">💣</div>
+    </div>
+
     <div class="info">
         <div id="vivosCount" style="color: #a7b0ba; font-weight: bold;">Prisioneros Libres: 0/5</div>
         <div id="levelDisplay" style="color: #e5c158; font-weight: bold; letter-spacing: 2px;">NIVEL 1</div>
@@ -350,7 +454,6 @@
     let cameraShake = 0;
     let globalTicks = 0;
     
-    // === EFECTOS PARA EXPLOSIÓN DEL JUGADOR (muerte) ===
     let flashWhite = 0;
     let bigExplosion = null;
     
@@ -362,6 +465,97 @@
         keys.Space = false;
     }
 
+    // ==================== CONTROLES TÁCTILES ====================
+    function setupTouchControls() {
+        const dpadBtns = document.querySelectorAll('.dpad-btn');
+        const bombBtn = document.getElementById('btnBomb');
+
+        function setKey(dir, pressed) {
+            if (dir === 'up') keys.ArrowUp = pressed;
+            else if (dir === 'down') keys.ArrowDown = pressed;
+            else if (dir === 'left') keys.ArrowLeft = pressed;
+            else if (dir === 'right') keys.ArrowRight = pressed;
+        }
+
+        dpadBtns.forEach(btn => {
+            const dir = btn.dataset.dir;
+            // Touch events
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btn.classList.add('active');
+                setKey(dir, true);
+            }, { passive: false });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                btn.classList.remove('active');
+                setKey(dir, false);
+            }, { passive: false });
+            btn.addEventListener('touchcancel', (e) => {
+                btn.classList.remove('active');
+                setKey(dir, false);
+            });
+            // Mouse events (para PC también si se quiere usar con clic)
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                btn.classList.add('active');
+                setKey(dir, true);
+            });
+            btn.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                btn.classList.remove('active');
+                setKey(dir, false);
+            });
+            btn.addEventListener('mouseleave', (e) => {
+                btn.classList.remove('active');
+                setKey(dir, false);
+            });
+        });
+
+        // Botón bomba
+        function pressBomb(pressed) {
+            if (pressed) {
+                if (!keys.Space) {
+                    if (players.length > 0 && players[0]) {
+                        players[0].tryPlaceBomb(true);
+                    }
+                }
+                keys.Space = true;
+            } else {
+                keys.Space = false;
+            }
+        }
+
+        bombBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            bombBtn.classList.add('active');
+            pressBomb(true);
+        }, { passive: false });
+        bombBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            bombBtn.classList.remove('active');
+            pressBomb(false);
+        }, { passive: false });
+        bombBtn.addEventListener('touchcancel', (e) => {
+            bombBtn.classList.remove('active');
+            pressBomb(false);
+        });
+        bombBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            bombBtn.classList.add('active');
+            pressBomb(true);
+        });
+        bombBtn.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            bombBtn.classList.remove('active');
+            pressBomb(false);
+        });
+        bombBtn.addEventListener('mouseleave', (e) => {
+            bombBtn.classList.remove('active');
+            pressBomb(false);
+        });
+    }
+
+    // ==================== EVENTOS TECLADO (PC) ====================
     window.addEventListener('keydown', (e) => {
         if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
         if(!gameRunning || players.length === 0 || !players[0]) return;
@@ -531,13 +725,10 @@
             this.moveState = 0; this.moveDirection = null; this.moveProgress = 0;
             this.alive = true;
             this.isReleased = (role !== 'prisoner');
-            // RANGO DE BOMBA REDUCIDO A 2
             this.bombRange = 2;
-            // VELOCIDADES AUMENTADAS
             this.baseSpeed = (role === 'specialist') ? 3.5 : (role === 'prisoner' ? 4.0 : 4.5);
             this.aiCooldown = 0;
             this.animFrame = Math.random() * 100;
-            // Para los fantasmas, asignamos un color de llama único
             this.flameColor = this.getFlameColor();
         }
 
@@ -1005,7 +1196,7 @@
                     let distanceToTarget = Math.abs(p.gridX - targetBrick.x) + Math.abs(p.gridY - targetBrick.y);
                     if(distanceToTarget === 1) {
                         if(p.tryPlaceBomb(false)) {
-                            p.aiCooldown = 15; // Reducido de 25 a 15
+                            p.aiCooldown = 15;
                             let escapeDirs = ['up','down','left','right'];
                             for(let ed of escapeDirs) { if(p.startMove(ed)) break; }
                             continue;
@@ -1024,7 +1215,7 @@
                 } else {
                     p.startMove(['up','down','left','right'][Math.floor(Math.random()*4)]);
                 }
-                p.aiCooldown = 2; // Reducido de 4 a 2
+                p.aiCooldown = 2;
             }
             
             if(p.role === 'prisoner') {
@@ -1035,7 +1226,7 @@
                     if(dir) { p.startMove(dir); } 
                     else { p.startMove(['up','down','left','right'][Math.floor(Math.random()*4)]); }
                 }
-                p.aiCooldown = 3; // Reducido de 6 a 3
+                p.aiCooldown = 3;
             }
         }
     }
@@ -1353,7 +1544,9 @@
         requestAnimationFrame(gameLoop);
     }
 
+    // ==================== INICIALIZACIÓN ====================
     map = initMap();
+    setupTouchControls();  // Activar controles táctiles
     gameLoop();
 </script>
 </body>
