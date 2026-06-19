@@ -162,11 +162,22 @@
             height: 200px;
             pointer-events: none;
             z-index: 5;
-            display: flex;
+            display: none;  /* ocultos por defecto */
             justify-content: space-between;
             padding: 0 20px;
             touch-action: none;
         }
+        /* visible solo en móviles (pantallas pequeñas) */
+        @media (max-width: 768px) {
+            .touch-controls {
+                display: flex !important;
+            }
+        }
+        /* también visible si se detecta táctil mediante JS (clase .touch-device) */
+        .touch-controls.touch-device {
+            display: flex !important;
+        }
+
         .dpad {
             pointer-events: auto;
             position: relative;
@@ -240,15 +251,6 @@
             .dpad-btn { width: 44px; height: 44px; font-size: 22px; }
             .btn-bomb { width: 70px; height: 70px; font-size: 28px; }
         }
-        @media (pointer: coarse) {
-            /* solo en táctil */
-            .touch-controls { display: flex; }
-        }
-        @media (pointer: fine) {
-            /* PC: ocultar controles táctiles para no estorbar, pero se pueden mostrar si se quiere */
-            .touch-controls { display: none; }
-        }
-        /* Si se quiere forzar a mostrar en PC también, quitar la regla anterior */
     </style>
 </head>
 <body>
@@ -287,6 +289,19 @@
 </div>
 
 <script>
+    // ==================== DETECCIÓN DE TÁCTIL ====================
+    (function detectTouch() {
+        const touchControls = document.getElementById('touchControls');
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            touchControls.classList.add('touch-device');
+        } else {
+            // Si no es táctil, pero el ancho es pequeño (tablet híbrida), forzamos mostrar
+            if (window.innerWidth <= 768) {
+                touchControls.classList.add('touch-device');
+            }
+        }
+    })();
+
     // ==================== SOUND MANAGER ====================
     class SoundManager {
         constructor() {
@@ -494,7 +509,7 @@
                 btn.classList.remove('active');
                 setKey(dir, false);
             });
-            // Mouse events (para PC también si se quiere usar con clic)
+            // Mouse events (para PC si se usa con clic)
             btn.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 btn.classList.add('active');
